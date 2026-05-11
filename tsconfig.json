@@ -2,9 +2,9 @@
   "compilerOptions": {
     /* Core Settings */
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "lib": ["ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler", // <-- Resolve o problema das extensões
+    "lib": ["DOM", "ESNext"],
     "rootDir": "./src",
     "outDir": "./dist",
 
@@ -22,9 +22,10 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false, // Alterado para false para evitar conflitos com importações de tipos
     "isolatedModules": true,
     "moduleDetection": "force",
+    "allowImportingTsExtensions": false, // Mantemos falso para usar caminhos sem extensão
 
     /* Output */
     "sourceMap": true,
