@@ -1,10 +1,8 @@
 
-export type SchemaTable = {
+export type SchemaTable<TColumn = {}> = {
   __nameTable: string;
   __nameColumns: string[];
-} & {
-  [key: string]: Column | any;
-};
+} & TColumn
 
 export type DataType = "integer" | "text";
 

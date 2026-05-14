@@ -1,21 +1,20 @@
-import { Column, SchemaTable, Database } from "../types"
-import { integer, text } from "./column"
+import { Column, SchemaTable } from "../types"
 
-export function createTable(
-  nameTable: string, 
-  columns: { [key: string]: Column }
-): SchemaTable {
-  const table: SchemaTable = {
+export function createTable<TColumn extends Record<string, Column>>(
+  nameTable: string,
+  columns: TColumn
+): SchemaTable<TColumn> {
+
+  const table: SchemaTable<TColumn> = {
     __nameTable: nameTable,
-    __nameColumns: Object.keys(columns)
+    __nameColumns: Object.keys(columns),
+    ...columns
   }
 
   for (let column in columns) {
     if (columns[column]) {
       columns[column].config.keySchema = column
     }
-    
-    table[column] = columns[column]
   }
 
   return table

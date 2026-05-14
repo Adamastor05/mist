@@ -114,11 +114,15 @@ export class Query {
     if (!this.tempSchemaTable) throw new Error("[Mist] Erro Interno: O contexto da tabela (schemaTable) foi perdido.");
 
     for (const [key, value] of Object.entries(values)) {
-      const schemaColumn = this.tempSchemaTable[key] as Column | undefined
+      const schemaColumn = this.tempSchemaTable[key as keyof typeof this.tempSchemaTable]
+
+      if (!schemaColumn || typeof schemaColumn !== "object" || !("config" in schemaColumn)) {
+        throw new Error(`A coluna '${key}' não existe`)
+      }
       
-      if (!schemaColumn) throw new Error(`A coluna '${key}' não existe na tabela '${this.tempSchemaTable.__nameTable}'`);
-      
-      const { dataType } = schemaColumn.config
+      const column = schemaColumn as Column
+
+      const { dataType } = column.config
 
       switch (dataType) {
         case "integer":
