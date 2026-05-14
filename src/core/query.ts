@@ -96,6 +96,9 @@ export class Query {
       }
     }
 
+    // Verifica se os tipos dos dados passados são os mesmos que foram definidos no schema
+    this.checkDataType(values)
+
     const tableName = this.tempSchemaTable.__nameTable
     const table = this.database.tables[tableName]
 
@@ -104,6 +107,33 @@ export class Query {
     table.data.push({ ...values })
 
     return this
+  }
+
+  private checkDataType(values: Record<string, any>): void {
+    if (!values) throw new Error("[Mist] Erro Interno: Objeto de valores ausente na validação.");
+    if (!this.tempSchemaTable) throw new Error("[Mist] Erro Interno: O contexto da tabela (schemaTable) foi perdido.");
+
+    for (const [key, value] of Object.entries(values)) {
+      const schemaColumn = this.tempSchemaTable[key] as Column | undefined
+      
+      if (!schemaColumn) throw new Error(`A coluna '${key}' não existe na tabela '${this.tempSchemaTable.__nameTable}'`);
+      
+      const { dataType } = schemaColumn.config
+
+      switch (dataType) {
+        case "integer":
+          if (typeof value !== "number" || !Number.isInteger(value)) {
+            throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
+          }
+          break
+
+        case "text":
+          if (typeof value !== "string") {
+            throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
+          }
+          break
+      }
+    }
   }
 
   execute() {
