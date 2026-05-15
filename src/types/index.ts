@@ -4,7 +4,7 @@ export type SchemaTable<TColumn = {}> = {
   __nameColumns: string[];
 } & TColumn
 
-export type DataType = "integer" | "text";
+export type DataType = "integer" | "text" | "boolean";
 
 export interface ConfigColumn {
     name: string;

@@ -136,6 +136,12 @@ export class Query {
             throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
           }
           break
+
+          case "boolean":
+          if (typeof value !== "boolean") {
+            throw new Error(`Erro de tipo: A coluna '${key}' espera um boolean, mas recebeu ${typeof value}`);
+          }
+          break
       }
     }
   }

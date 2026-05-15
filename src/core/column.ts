@@ -32,3 +32,4 @@ class Column {
 
 export const integer = (name: string) => new Column(name, "integer")
 export const text = (name: string) => new Column(name, "text")
+export const boolean = (name: string) => new Column(name, "boolean")
