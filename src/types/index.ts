@@ -2,7 +2,9 @@
 export type SchemaTable<TColumn = {}> = {
   __nameTable: string;
   __nameColumns: string[];
-} & TColumn
+} & TColumn  & {
+  [key: string]: Column
+}
 
 export type DataType = "integer" | "text" | "boolean";
 
@@ -26,6 +28,7 @@ export interface LineTable {
 export interface Table {
   config: SchemaTable;
   data: LineTable[];
+  indexes: Record<string, Set<any>>
 }
 
 export interface Database {
