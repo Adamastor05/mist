@@ -99,6 +99,8 @@ export class Query {
     // Verifica se os tipos dos dados passados são os mesmos que foram definidos no schema
     this.checkDataType(values)
 
+    this.validateConstraints(values)
+
     const tableName = this.tempSchemaTable.__nameTable
     const table = this.database.tables[tableName]
 
@@ -108,6 +110,10 @@ export class Query {
 
     return this
   }
+
+  /*/////////////////////////////
+    METODOS PRIVADOS DE VALIDAÇÃO PARA O METODO "values" 
+  */
 
   private checkDataType(values: Record<string, any>): void {
     if (!values) throw new Error("[Mist] Erro Interno: Objeto de valores ausente na validação.");
@@ -145,6 +151,45 @@ export class Query {
       }
     }
   }
+
+  private validateConstraints(values: Record<string, any>): void {
+    if (!values) throw new Error("[Mist] Erro Interno: Objeto de valores ausente na validação.");
+    if (!this.tempSchemaTable) throw new Error("[Mist] Erro Interno: O contexto da tabela (schemaTable) foi perdido.");
+
+    const tableName = this.tempSchemaTable.__nameTable
+    const table = this.database.tables[tableName]
+
+    if (!table) throw new Error("[Mist] Erro Interno: Tabela não existe")
+
+    for (const [key, value] of Object.entries(values)) {
+      const schemaColumn = this.tempSchemaTable[key as keyof typeof this.tempSchemaTable]
+
+      if (!schemaColumn || typeof schemaColumn !== "object" || !("config" in schemaColumn)) {
+        throw new Error(`A coluna '${key}' não existe`)
+      }
+      
+      const column = schemaColumn as Column
+      const { config } = column
+
+      if (config.primaryKey || config.unique) {
+        const columnIndexes = table.indexes[key]
+        
+        if (!columnIndexes) throw new Error(`[Mist] Erro Interno: O índice para a coluna '${key}' não foi inicializado.`)
+          
+        const valueExistiInColumn = columnIndexes.has(value)
+
+        if (valueExistiInColumn) {
+          throw new Error(`Erro de Restrição: O valor '${value}' já existe na coluna '${key}'.`);
+        }
+
+        columnIndexes.add(value)
+      }
+    }
+  }
+  
+  /*
+    ///////////
+  *//////////////////////////////////
 
   execute() {
     let result: unknown; 
