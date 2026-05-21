@@ -11,10 +11,17 @@ export function createTable<TColumn extends Record<string, Column>>(
     ...columns
   }
 
+  const primaryKeyColumns = Object.values(columns).filter(
+    (column) => column.config.primaryKey === true
+  )
+  // verifica se a tabela tem mais de uma coluna primaryKey
+  if (primaryKeyColumns.length > 1) {
+    throw new Error(`ERRO: não são permitidas múltiplas chaves primárias na tabela '${nameTable}'.`)
+  }
+
   for (let column in columns) {
-    if (columns[column]) {
-      columns[column].config.keySchema = column
-    }
+    if (!columns[column]) throw new Error(`[Mist] Erro Interno: A coluna não existe.`);
+    columns[column].config.keySchema = column
   }
 
   return table
