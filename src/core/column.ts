@@ -16,6 +16,8 @@ class Column {
   
   primaryKey() {
     this.config.primaryKey = true
+    this.config.unique = true
+    this.config.notNull = true
     return this
   }
 

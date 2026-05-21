@@ -171,7 +171,7 @@ export class Query {
       const column = schemaColumn as Column
       const { config } = column
 
-      if (config.primaryKey || config.unique) {
+      if (config.unique) {
         const columnIndexes = table.indexes[key]
         
         if (!columnIndexes) throw new Error(`[Mist] Erro Interno: O índice para a coluna '${key}' não foi inicializado.`)
@@ -179,7 +179,7 @@ export class Query {
         const valueExistiInColumn = columnIndexes.has(value)
 
         if (valueExistiInColumn) {
-          throw new Error(`Erro de Restrição: O valor '${value}' já existe na coluna '${key}'.`);
+          throw new Error(`Erro: duplicar valor da chave viola a restrição de unicidade, coluna: '${key}' já tem o valor: '${value}'`);
         }
 
         columnIndexes.add(value)
