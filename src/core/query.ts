@@ -101,6 +101,8 @@ export class Query {
 
     this.validateConstraints(values)
 
+    this.checkNotNull(values)
+
     const tableName = this.tempSchemaTable.__nameTable
     const table = this.database.tables[tableName]
 
@@ -183,6 +185,24 @@ export class Query {
         }
 
         columnIndexes.add(value)
+      }
+    }
+  }
+
+  private checkNotNull(values: Record<string, any>): void {
+    if (!values) throw new Error("[Mist] Erro Interno: Objeto de valores ausente na validação.");
+    if (!this.tempSchemaTable) throw new Error("[Mist] Erro Interno: O contexto da tabela (schemaTable) foi perdido.");
+
+    
+    for (const columnName of this.tempSchemaTable.__nameColumns) {
+      const column = this.tempSchemaTable[columnName] as Column;
+      
+      if (column.config.notNull) {
+        const value = values[columnName];
+
+        if (value === undefined || value === null) {
+          throw new Error(`Erro: A coluna '${columnName}' é obrigatória e não pode ser nula.`);
+        }
       }
     }
   }
