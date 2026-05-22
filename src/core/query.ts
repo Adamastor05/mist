@@ -1,4 +1,4 @@
-import { Database as IDatabase, Column, SchemaTable } from "../types";
+import { Database as IDatabase, Column, SchemaTable, ConfigColumn, DataType } from "../types";
 
 export class Query {
   private database: IDatabase;
@@ -96,12 +96,7 @@ export class Query {
       }
     }
 
-    // Verifica se os tipos dos dados passados são os mesmos que foram definidos no schema
-    this.checkDataType(values)
-
-    this.validateConstraints(values)
-
-    this.checkNotNull(values)
+    this.assertConstraints(values)
 
     const tableName = this.tempSchemaTable.__nameTable
     const table = this.database.tables[tableName]
@@ -116,53 +111,20 @@ export class Query {
   /*/////////////////////////////
     METODOS PRIVADOS DE VALIDAÇÃO PARA O METODO "values" 
   */
-
-  private checkDataType(values: Record<string, any>): void {
-    if (!values) throw new Error("[Mist] Erro Interno: Objeto de valores ausente na validação.");
-    if (!this.tempSchemaTable) throw new Error("[Mist] Erro Interno: O contexto da tabela (schemaTable) foi perdido.");
-
-    for (const [key, value] of Object.entries(values)) {
-      const schemaColumn = this.tempSchemaTable[key as keyof typeof this.tempSchemaTable]
-
-      if (!schemaColumn || typeof schemaColumn !== "object" || !("config" in schemaColumn)) {
-        throw new Error(`A coluna '${key}' não existe`)
-      }
-      
-      const column = schemaColumn as Column
-
-      const { dataType } = column.config
-
-      switch (dataType) {
-        case "integer":
-          if (typeof value !== "number" || !Number.isInteger(value)) {
-            throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
-          }
-          break
-
-        case "text":
-          if (typeof value !== "string") {
-            throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
-          }
-          break
-
-          case "boolean":
-          if (typeof value !== "boolean") {
-            throw new Error(`Erro de tipo: A coluna '${key}' espera um boolean, mas recebeu ${typeof value}`);
-          }
-          break
-      }
-    }
-  }
-
-  private validateConstraints(values: Record<string, any>): void {
+  
+  private assertConstraints(values: Record<string, any>): void {
     if (!values) throw new Error("[Mist] Erro Interno: Objeto de valores ausente na validação.");
     if (!this.tempSchemaTable) throw new Error("[Mist] Erro Interno: O contexto da tabela (schemaTable) foi perdido.");
 
     const tableName = this.tempSchemaTable.__nameTable
     const table = this.database.tables[tableName]
 
-    if (!table) throw new Error("[Mist] Erro Interno: Tabela não existe")
+    if (!table) throw new Error("[Mist] Erro Interno: Tabela não existe");
 
+    // Verifica se as colunas com notNull estão sendo preechidas
+    this.checkNotNull(values)
+
+    // Um único loop para validar tipos e unicidade dos valores enviados
     for (const [key, value] of Object.entries(values)) {
       const schemaColumn = this.tempSchemaTable[key as keyof typeof this.tempSchemaTable]
 
@@ -173,27 +135,55 @@ export class Query {
       const column = schemaColumn as Column
       const { config } = column
 
+      // Valida o tipo do dado
+      this.checkDataType(key, value, config.dataType)
+
+      // Valida a restrição de unicidade
       if (config.unique) {
-        const columnIndexes = table.indexes[key]
-        
-        if (!columnIndexes) throw new Error(`[Mist] Erro Interno: O índice para a coluna '${key}' não foi inicializado.`)
-          
-        const valueExistiInColumn = columnIndexes.has(value)
+        if (!table.indexes[key]) throw new Error(`[Mist] Erro Interno: A coluna '${key}' não possui indices.`)
 
-        if (valueExistiInColumn) {
-          throw new Error(`Erro: duplicar valor da chave viola a restrição de unicidade, coluna: '${key}' já tem o valor: '${value}'`);
-        }
-
-        columnIndexes.add(value)
+        this.checkUnique(key, value, table.indexes[key])
       }
     }
+  }
+
+  private checkDataType(key: string, value: any, dataType: DataType): void {
+    switch (dataType) {
+      case "integer":
+        if (typeof value !== "number" || !Number.isInteger(value)) {
+          throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
+        }
+        break
+
+      case "text":
+        if (typeof value !== "string") {
+          throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
+        }
+        break
+
+      case "boolean":
+        if (typeof value !== "boolean") {
+          throw new Error(`Erro de tipo: A coluna '${key}' espera um boolean, mas recebeu ${typeof value}`);
+        }
+        break
+    }
+  }
+
+  private checkUnique(key: string, value: any, columnIndexes: Set<any>): void {
+    if (!columnIndexes) throw new Error(`[Mist] Erro Interno: O índice para a coluna '${key}' não foi inicializado.`)
+      
+    const valueExistiInColumn = columnIndexes.has(value)
+    if (valueExistiInColumn) {
+      throw new Error(`Erro: duplicar valor da chave viola a restrição de unicidade, coluna: '${key}' já tem o valor: '${value}'`);
+    }
+
+    columnIndexes.add(value)
   }
 
   private checkNotNull(values: Record<string, any>): void {
     if (!values) throw new Error("[Mist] Erro Interno: Objeto de valores ausente na validação.");
     if (!this.tempSchemaTable) throw new Error("[Mist] Erro Interno: O contexto da tabela (schemaTable) foi perdido.");
 
-    
     for (const columnName of this.tempSchemaTable.__nameColumns) {
       const column = this.tempSchemaTable[columnName] as Column;
       
