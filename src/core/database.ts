@@ -1,6 +1,8 @@
 import { Column, Database as IDatabase, SchemaTable } from "../types"
 
 export function createDatabase(schemasTables: { [key: string]: SchemaTable }): IDatabase {
+  if (!schemasTables) throw new Error("ERRO: Nenhum esquema foi passado para função 'createDatabase'")
+
   const database: IDatabase = {
     tables: {}
   }
