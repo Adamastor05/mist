@@ -1,4 +1,4 @@
-import { Database as IDatabase, Column, SchemaTable, ConfigColumn, DataType } from "../types";
+import { Database as IDatabase, Column, SchemaTable, DataType } from "../types";
 
 export class Query {
   private database: IDatabase;
@@ -32,13 +32,13 @@ export class Query {
   }
 
   from(schemaTable: SchemaTable): Query {
-    if (!schemaTable) throw new Error("O schema da table não foi especificado no 'from'");
+    if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'from'");
 
     const tableName = schemaTable.__nameTable
     const table = this.database.tables[tableName]
 
     // Verifica se a tabela existe no banco
-    if (!table) throw new Error(`Tabela ${tableName} não existe`);
+    if (!table) throw new Error(`Erro: Tabela ${tableName} não existe`);
 
     // Envia uma copia de todas as linhas da tabela se nenhuma coluna tiver sido especificada
     if (this.tempColumns.length === 0) {
@@ -73,7 +73,7 @@ export class Query {
   }
 
   insert(schemaTable: SchemaTable): Query {
-    if (!schemaTable) throw new Error("Nenhuma tabela foi especificada");
+    if (!schemaTable) throw new Error("Erro: Nenhuma tabela foi especificada no 'insert'");
 
     // Verifica se a tabela existe no banco
     const tableName = schemaTable.__nameTable
@@ -86,13 +86,13 @@ export class Query {
   }
 
   values(values: Record<string, any>): Query {
-    if (!values) throw new Error("Faltando os valores");
-    if (!this.tempSchemaTable) throw new Error("[Erro interno]: O tempSchemaTable não existe ou é null");
+    if (!values) throw new Error("Erro: Nenhum valor foi passado no 'values'");
+    if (!this.tempSchemaTable) throw new Error("[Mist] Erro interno: O tempSchemaTable não existe ou é null");
 
     // verifica se as chaves de values exitem na tabela
     for (const key in values) {
       if (!this.tempSchemaTable.__nameColumns.includes(key)) {
-        throw new Error(`A coluna ${key} não existe no tabela`)
+        throw new Error(`ERRO: A coluna ${key} não existe no tabela`)
       }
     }
 
@@ -101,7 +101,7 @@ export class Query {
     const tableName = this.tempSchemaTable.__nameTable
     const table = this.database.tables[tableName]
 
-    if (!table) throw new Error(`[Erro intero]: A tabela ${tableName} não foi encontrada no banco`)
+    if (!table) throw new Error(`[Mist] Erro interno: A tabela ${tableName} não foi encontrada no banco`)
 
     table.data.push({ ...values })
 
