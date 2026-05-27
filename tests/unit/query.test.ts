@@ -44,6 +44,26 @@ describe("Query", () => {
           email: "lucas@gmail.com",
         });
       });
+
+      it("deve inserir null em uma coluna não obrigatória que não foi passada para valeus()", () => {
+        const res = db
+          .insert(users)
+          .values({
+            id: 1,
+            name: "lucas",
+            // age não é passado, mas também não é obrigatório
+            email: "lucas@gmail.com",
+          })
+          .execute();
+  
+        expect(res).toBe("Dados inseridos com sucesso!");
+        expect(database.tables.users.data[0]).toEqual({
+          id: 1,
+          name: "lucas",
+          age: null,
+          email: "lucas@gmail.com",
+        });
+      });
     })
 
     describe("Cenários de Erro", () => {
