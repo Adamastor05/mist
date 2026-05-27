@@ -101,9 +101,17 @@ export class Query {
     const tableName = this.tempSchemaTable.__nameTable
     const table = this.database.tables[tableName]
 
-    if (!table) throw new Error(`[Mist] Erro interno: A tabela ${tableName} não foi encontrada no banco`)
+    if (!table) throw new Error(`[Mist] Erro interno: A tabela ${tableName} não foi encontrada no banco`);
 
-    table.data.push({ ...values })
+    const newLine: Record<string, any> = {}
+
+    for (const nameColumn of table.config.__nameColumns) {
+      const value = values[nameColumn]
+
+      newLine[nameColumn] = value ?? null // Se uma coluna que não é obrigatória não receber nenhum valor, colocamos null
+    }
+
+    table.data.push({ ...newLine })
 
     return this
   }
