@@ -157,7 +157,7 @@ export class Query {
 
       case "text":
         if (typeof value !== "string") {
-          throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);
+          throw new Error(`Erro de tipo: A coluna '${key}' espera um text, mas recebeu ${typeof value}`);
         }
         break
 
