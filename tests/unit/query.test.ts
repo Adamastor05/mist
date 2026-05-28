@@ -206,6 +206,30 @@ describe("Query", () => {
           { name: "Daniel", email: "daniel@gmail.com" },
         ]);
       });
+
+      it("deve mapear os resultados usando aliases (apelidos) para as colunas selecionadas", () => {
+        db.insert(users)
+        .values({ id: 1, name: "lucas", age: 20, email: "lucas@gmail.com" })
+        .execute();
+          
+        db.insert(users)
+        .values({ id: 2, name: "Daniel", age: 22, email: "daniel@gmail.com" })
+        .execute();
+  
+        const res = db
+          .select({
+            // chaves passadas com nomes diferente da coluna
+            userName: users.name,
+            userEmail: users.email,
+          })
+          .from(users)
+          .execute();
+  
+        expect(res).toEqual([
+          { userName: "lucas", userEmail: "lucas@gmail.com" },
+          { userName: "Daniel", userEmail: "daniel@gmail.com" },
+        ]);
+      });
     })
 
     describe("Cenários de Erro", () => {
