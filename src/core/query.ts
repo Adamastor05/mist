@@ -35,7 +35,7 @@ export class Query {
     if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'from'");
 
     this.tempSchemaTable = schemaTable
-    
+
     return this
   }
 
@@ -176,6 +176,14 @@ export class Query {
     ///////////
   *//////////////////////////////////
 
+  private clearState(): void {
+    this.tempKeys = []
+    this.tempColumns = []
+    this.tempSchemaTable = null
+    this.queryType = ""
+    this.tempData = []
+  }
+
   execute() {
     let result: unknown; 
 
@@ -196,10 +204,7 @@ export class Query {
 
         result = this.tempData
 
-        this.tempData = []
-        this.queryType = ""
-        this.tempSchemaTable = null
-
+        this.clearState()
         return result
       }
 
@@ -220,20 +225,13 @@ export class Query {
       }
 
       result = this.tempData
-
-      // reseta os valores
-      this.tempKeys = []
-      this.tempColumns = []
-      this.tempSchemaTable = null
-      this.queryType = ""
-      this.tempData = []
+      this.clearState()
     }
 
 
     if (this.queryType === "INSERT") {
       result = "Dados inseridos com sucesso!"
-
-      this.queryType = ""
+      this.clearState()
     }
 
     return result
