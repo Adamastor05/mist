@@ -35,42 +35,7 @@ export class Query {
     if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'from'");
 
     this.tempSchemaTable = schemaTable
-    /*
-    const tableName = schemaTable.__nameTable
-    const table = this.database.tables[tableName]
-
-    // Verifica se a tabela existe no banco
-    if (!table) throw new Error(`Erro: Tabela ${tableName} não existe`);
-
-    // Envia uma copia de todas as linhas da tabela se nenhuma coluna tiver sido especificada
-    if (this.tempColumns.length === 0) {
-      table.data.forEach(line => {
-        this.tempData.push({ ...line })
-      })
-
-      return this
-    }
-
-    // Monta as novas linhas
-    for (const line of table.data) {
-      const newLine: Record<string, any> = {}
-
-      for (let i = 0; i < this.tempColumns.length; i++) {
-        const key = this.tempKeys[i]
-        const tempColumn = this.tempColumns[i]
-        
-        if (key !== undefined && tempColumn !== undefined) {
-          newLine[key] = line[tempColumn]
-        }
-      }
-
-      this.tempData.push({ ...newLine }) // envia uma copia da linha
-    }
-
-    // reseta os valores
-    this.tempKeys = []
-    this.tempColumns = []
-    */
+    
     return this
   }
 
