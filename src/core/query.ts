@@ -6,6 +6,7 @@ export class Query {
   private tempKeys: string[];
   private tempSchemaTable: SchemaTable | null;
   private tempColumns: string[];
+  private tempValuesToInsert: Record<string, any>;
   private tempData: any[];
 
   constructor(database: IDatabase) {
@@ -14,6 +15,7 @@ export class Query {
     this.tempKeys = [],
     this.tempSchemaTable = null;
     this.tempColumns = [],
+    this.tempValuesToInsert = {}
     this.tempData = []
   }
 
@@ -65,21 +67,7 @@ export class Query {
 
     this.assertConstraints(values)
 
-    const tableName = this.tempSchemaTable.__nameTable
-    const table = this.database.tables[tableName]
-
-    if (!table) throw new Error(`[Mist] Erro interno: A tabela ${tableName} não foi encontrada no banco`);
-
-    const newLine: Record<string, any> = {}
-
-    for (const nameColumn of table.config.__nameColumns) {
-      const value = values[nameColumn]
-
-      newLine[nameColumn] = value ?? null // Se uma coluna que não é obrigatória não receber nenhum valor, colocamos null
-    }
-
-    table.data.push({ ...newLine })
-
+    this.tempValuesToInsert = values
     return this
   }
 
@@ -180,6 +168,7 @@ export class Query {
     this.tempKeys = []
     this.tempColumns = []
     this.tempSchemaTable = null
+    this.tempValuesToInsert = {}
     this.queryType = ""
     this.tempData = []
   }
@@ -230,6 +219,24 @@ export class Query {
 
 
     if (this.queryType === "INSERT") {
+      if (!this.tempSchemaTable) throw new Error("[Mist] Erro interno: O tempSchemaTable não existe ou é null");
+      if (!this.tempValuesToInsert) throw new Error("[Mist] Erro interno: O tempValuesToInsert não existe");
+
+      const tableName = this.tempSchemaTable.__nameTable
+      const table = this.database.tables[tableName]
+
+      if (!table) throw new Error(`[Mist] Erro interno: A tabela ${tableName} não foi encontrada no banco`);
+
+      const newLine: Record<string, any> = {}
+
+      for (const nameColumn of table.config.__nameColumns) {
+        const value = this.tempValuesToInsert[nameColumn]
+
+        newLine[nameColumn] = value ?? null // Se uma coluna que não é obrigatória não receber nenhum valor, colocamos null
+      }
+
+      table.data.push({ ...newLine })
+
       result = "Dados inseridos com sucesso!"
       this.clearState()
     }
