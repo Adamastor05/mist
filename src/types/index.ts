@@ -34,3 +34,22 @@ export interface Table {
 export interface Database {
   tables: { [key: string]: Table };
 }
+
+
+export type Condition = 
+  | {
+      type: "binary",
+      columnName: string,
+      operator: "eq" | "ne" | "gt" | "gte" | "lt" | "lte",
+      value: any
+    }
+  | {
+      type: "logical",
+      operator: "and" | "or",
+      conditions: Condition[]
+    }
+  | {
+    type: "logical",
+    operator: "not",
+    condition: Condition
+  }

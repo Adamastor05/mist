@@ -1,4 +1,4 @@
-import { Database as IDatabase, Column, SchemaTable, DataType } from "../types";
+import { Database as IDatabase, Column, SchemaTable, DataType, Condition } from "../types";
 
 export class Query {
   private database: IDatabase;
@@ -7,6 +7,7 @@ export class Query {
   private tempSchemaTable: SchemaTable | null;
   private tempColumns: string[];
   private tempValuesToInsert: Record<string, any>;
+  private tempWhereCondition: Condition | null;
   private tempData: any[];
 
   constructor(database: IDatabase) {
@@ -16,6 +17,7 @@ export class Query {
     this.tempSchemaTable = null;
     this.tempColumns = [],
     this.tempValuesToInsert = {}
+    this.tempWhereCondition = null;
     this.tempData = []
   }
 
@@ -164,12 +166,79 @@ export class Query {
     ///////////
   *//////////////////////////////////
 
+  where(condition: Condition): Query {
+    if (!condition) throw new Error("Erro: Nenhuma condição foi passada para where.");
+
+    this.tempWhereCondition = condition
+    return this
+  }
+
+  private evalCondition(line: Record<string, any>, condition: Condition): boolean {
+    if (!this.tempWhereCondition) throw new Error("[Mist] Erro interno: A condição temporária 'tempWhereCondition' não existe");
+    
+    if (condition.type === "binary") {
+    const { columnName, operator, value } = condition
+    const columnValue = line[columnName]
+
+      switch (operator) {
+        case "eq": return columnValue === value
+        case "ne": return columnValue !== value 
+
+        case "gt":
+          // Retorna erro se os tipos forem diferentes
+          if (typeof columnValue !== typeof value) { 
+            throw new Error(`Erro de tipo: Não é possível comparar ${typeof columnValue} com ${typeof value}`)
+          }
+          return columnValue > value
+
+        case "gte":
+          if (typeof columnValue !== typeof value) { 
+            throw new Error(`Erro de tipo: Não é possível comparar ${typeof columnValue} com ${typeof value}`)
+          }
+          return columnValue >= value
+
+        case "lt": 
+           if (typeof columnValue !== typeof value) { 
+            throw new Error(`Erro de tipo: Não é possível comparar ${typeof columnValue} com ${typeof value}`)
+          }
+          return columnValue < value
+
+        case "lte": 
+           if (typeof columnValue !== typeof value) { 
+            throw new Error(`Erro de tipo: Não é possível comparar ${typeof columnValue} com ${typeof value}`)
+          }
+          return columnValue <= value
+
+        default: return false
+      }
+    }
+
+    if (condition.type === "logical") {
+      if (condition.operator === "and") {
+        // .every() garante que TODAS as sub-condições retornem true, se não ele retorna false
+        return condition.conditions.every(subCond => this.evalCondition(line, subCond)) 
+      }
+
+      if (condition.operator === "or") {
+        // .some() garante que pelo menos UMA sub-condição retorne true, se não ele retorna false
+        return condition.conditions.some(subCond => this.evalCondition(line, subCond))
+      }
+
+      if (condition.operator === "not") {
+        return !this.evalCondition(line, condition.condition)
+      }
+    }
+
+    return false
+  }
+
   private clearState(): void {
     this.tempKeys = []
     this.tempColumns = []
     this.tempSchemaTable = null
     this.tempValuesToInsert = {}
     this.queryType = ""
+    this.tempWhereCondition = null
     this.tempData = []
   }
 
@@ -187,9 +256,14 @@ export class Query {
 
       // Envia uma copia de todas as linhas da tabela se nenhuma coluna tiver sido especificada
       if (this.tempColumns.length === 0) {
-        table.data.forEach(line => {
+        for (const line of table.data) {
+          // Se existir um WHERE e a linha NÃO bater com a condição, pula para a próxima imediatamente
+          if (this.tempWhereCondition && !this.evalCondition(line, this.tempWhereCondition)) {
+            continue
+          }
+
           this.tempData.push({ ...line })
-        })
+        }
 
         result = this.tempData
 
@@ -199,6 +273,11 @@ export class Query {
 
       // Monta as novas linhas
       for (const line of table.data) {
+        // Se existir um WHERE e a linha NÃO bater com a condição, pula para a próxima imediatamente
+        if (this.tempWhereCondition && !this.evalCondition(line, this.tempWhereCondition)) {
+          continue
+        }
+
         const newLine: Record<string, any> = {}
 
         for (let i = 0; i < this.tempColumns.length; i++) {
