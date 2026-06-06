@@ -2,11 +2,12 @@ import { Database as IDatabase, Column, SchemaTable, DataType, Condition } from 
 
 export class Query {
   private database: IDatabase;
-  private queryType: "SELECT" | "INSERT" | ""; 
+  private queryType: "SELECT" | "INSERT" | "UPDATE" | ""; 
   private tempKeys: string[];
   private tempSchemaTable: SchemaTable | null;
   private tempColumns: string[];
   private tempValuesToInsert: Record<string, any>;
+  private tempValuesToUpdate: Record<string, any>;
   private tempWhereCondition: Condition | null;
   private tempData: any[];
 
@@ -17,6 +18,7 @@ export class Query {
     this.tempSchemaTable = null;
     this.tempColumns = [],
     this.tempValuesToInsert = {}
+    this.tempValuesToUpdate = {}
     this.tempWhereCondition = null;
     this.tempData = []
   }
@@ -74,7 +76,7 @@ export class Query {
   }
 
   /*/////////////////////////////
-    METODOS PRIVADOS DE VALIDAÇÃO PARA O METODO "values" 
+    METODOS PRIVADOS DE VALIDAÇÃO
   */
   
   private assertConstraints(values: Record<string, any>): void {
@@ -105,9 +107,11 @@ export class Query {
 
       // Valida a restrição de unicidade
       if (config.unique) {
-        if (!table.indexes[key]) throw new Error(`[Mist] Erro Interno: A coluna '${key}' não possui indices.`)
+        if (!table.indexes[key]) throw new Error(`[Mist] Erro Interno: A coluna '${key}' não possui indices.`);
 
-        this.checkUnique(key, value, table.indexes[key])
+        if (this.queryType === "INSERT") {
+          this.checkUnique(key, value, table.indexes[key])
+        }
       }
     }
   }
@@ -155,8 +159,19 @@ export class Query {
       if (column.config.notNull) {
         const value = values[columnName];
 
-        if (value === undefined || value === null) {
-          throw new Error(`Erro: A coluna '${columnName}' é obrigatória e não pode ser nula.`);
+        if (this.queryType === "INSERT") {
+          if (value === undefined || value === null) {
+            throw new Error(`Erro: A coluna '${columnName}' é obrigatória e não pode ser nula.`);
+          }
+        }
+
+        if (this.queryType === "UPDATE") {
+          // Verifica se a coluna foi passada para set()
+          const columnExistInValues = columnName in values
+
+          if (columnExistInValues && (value === undefined || value === null)) {
+            throw new Error(`Erro: A coluna '${columnName}' é obrigatória e não pode ser nula.`);
+          }
         }
       }
     }
@@ -165,6 +180,45 @@ export class Query {
   /*
     ///////////
   *//////////////////////////////////
+
+  /*//////////////////////
+    UPDATE e SET
+  */
+
+  update(schemaTable: SchemaTable): Query {
+    if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'update'");
+
+    this.queryType = "UPDATE"
+    this.tempSchemaTable = schemaTable
+
+    return this
+  }
+
+  set(values: Record<string, any>): Query {
+    if (!values) throw new Error("Erro: Nenhum valor foi passado no 'set'");
+    if (!this.tempSchemaTable) throw new Error("[Mist] Erro interno: O tempSchemaTable não existe ou é null");
+
+    // verifica se as chaves de values exitem na tabela
+    for (const key in values) {
+      if (!this.tempSchemaTable.__nameColumns.includes(key)) {
+        throw new Error(`ERRO: A coluna ${key} não existe no tabela`)
+      }
+    }
+
+    this.assertConstraints(values)
+
+    this.tempValuesToUpdate = values
+    return this
+  }
+
+  /*
+    ///////////
+  *//////////////////////////////////
+
+
+  /*//////////////////////
+    WHERE
+  */
 
   where(condition: Condition): Query {
     if (!condition) throw new Error("Erro: Nenhuma condição foi passada para where.");
@@ -232,11 +286,16 @@ export class Query {
     return false
   }
 
+  /*
+    ///////////
+  *//////////////////////////////////
+
   private clearState(): void {
     this.tempKeys = []
     this.tempColumns = []
     this.tempSchemaTable = null
     this.tempValuesToInsert = {}
+    this.tempValuesToUpdate = {}
     this.queryType = ""
     this.tempWhereCondition = null
     this.tempData = []
@@ -318,6 +377,74 @@ export class Query {
 
       result = "Dados inseridos com sucesso!"
       this.clearState()
+    }
+
+
+    if (this.queryType === "UPDATE") {
+      if (!this.tempSchemaTable) throw new Error("[Mist] Erro interno: O tempSchemaTable não existe ou é null");
+
+      const tableName = this.tempSchemaTable.__nameTable
+      const table = this.database.tables[tableName]
+
+      // Verifica se a tabela existe no banco
+      if (!table) throw new Error(`Erro: Tabela ${tableName} não existe`);
+
+      // -------------------------------------------------------------
+      // FASE 1: VALIDAÇÃO (Garante que a operação é segura para TODAS as linhas)
+      // -------------------------------------------------------------
+      // Criar um Set temporário para simular as adições desta query e evitar colisões no mesmo comando
+      const futurosValoresUnicos = new Set<string>();
+
+      for (const line of table.data) {
+        if (this.tempWhereCondition && !this.evalCondition(line, this.tempWhereCondition)) {
+          continue;
+        }
+
+        for (const columnName of Object.keys(this.tempValuesToUpdate)) {
+          const newValue = this.tempValuesToUpdate[columnName];
+          const oldValue = line[columnName];
+
+          if (newValue !== oldValue && table.indexes[columnName]) {
+            // Se o valor já existe no banco OU se outra linha neste mesmo UPDATE já tentou usar este valor
+            if (table.indexes[columnName].has(newValue) || futurosValoresUnicos.has(`${columnName}:${newValue}`)) {
+              throw new Error(`Erro: duplicar valor da chave viola a restrição de unicidade, coluna: '${columnName}' já tem o valor: '${newValue}'`);
+            }
+            
+            // Registra que esta query vai passar a usar este valor nesta coluna
+            futurosValoresUnicos.add(`${columnName}:${newValue}`);
+          }
+        }
+      }
+      
+      for (const line of table.data) {
+        // Se existir um WHERE e a linha NÃO bater com a condição, pula para a próxima imediatamente
+        if (this.tempWhereCondition && !this.evalCondition(line, this.tempWhereCondition)) {
+          continue
+        }
+
+        // Antes de atualizar a linha, validam e atualiza os índices das colunas unique
+        for (const columnName of Object.keys(this.tempValuesToUpdate)) {
+          const newValue = this.tempValuesToUpdate[columnName];
+          const oldValue = line[columnName];
+
+          // Se o valor tiver mudado, garante que o novo vaor não exista nos indeces
+          if (newValue !== oldValue && table.indexes[columnName]) {
+
+            // remove o valor antigo e adiciona o novo
+            table.indexes[columnName].delete(oldValue)
+            table.indexes[columnName].add(newValue)
+          }
+        }
+
+        for (const columnName of Object.keys(this.tempValuesToUpdate)) {
+          const newValue = this.tempValuesToUpdate[columnName]
+
+          line[columnName] = newValue
+        }
+      }
+
+      this.clearState()
+      result = "Dados atualizados com sucesso!"
     }
 
     return result
