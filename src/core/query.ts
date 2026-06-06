@@ -415,7 +415,10 @@ export class Query {
           }
         }
       }
-      
+
+      // -------------------------------------------------------------
+      // FASE 2: MUTAÇÃO (Só chega aqui se NENHUMA linha falhou na Fase 1)
+      // -------------------------------------------------------------
       for (const line of table.data) {
         // Se existir um WHERE e a linha NÃO bater com a condição, pula para a próxima imediatamente
         if (this.tempWhereCondition && !this.evalCondition(line, this.tempWhereCondition)) {
