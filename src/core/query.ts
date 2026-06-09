@@ -2,7 +2,7 @@ import { Database as IDatabase, Column, SchemaTable, DataType, Condition } from 
 
 export class Query {
   private database: IDatabase;
-  private queryType: "SELECT" | "INSERT" | "UPDATE" | ""; 
+  private queryType: "SELECT" | "INSERT" | "UPDATE" | "DELETE" | ""; 
   private tempKeys: string[];
   private tempSchemaTable: SchemaTable | null;
   private tempColumns: string[];
@@ -215,6 +215,22 @@ export class Query {
     ///////////
   *//////////////////////////////////
 
+  /*//////////////////////
+    DELETE
+  */
+
+   delete(schemaTable: SchemaTable): Query {
+    if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'delete'");
+
+    this.queryType = "DELETE"
+    this.tempSchemaTable = schemaTable
+
+    return this
+  }
+
+  /*
+    ///////////
+  *//////////////////////////////////
 
   /*//////////////////////
     WHERE
@@ -448,6 +464,66 @@ export class Query {
 
       this.clearState()
       result = "Dados atualizados com sucesso!"
+    }
+
+
+    if (this.queryType === "DELETE") {
+      if (!this.tempSchemaTable) throw new Error("[Mist] Erro interno: O tempSchemaTable não existe ou é null");
+
+      const tableName = this.tempSchemaTable.__nameTable
+      const table = this.database.tables[tableName]
+
+      // Verifica se a tabela existe no banco
+      if (!table) throw new Error(`Erro: Tabela ${tableName} não existe`);
+
+      // -------------------------------------------------------------
+      // CASO 1: SEM WHERE (Apagar a tabela toda)
+      // -------------------------------------------------------------
+      if (!this.tempWhereCondition) {
+        table.data = [];
+        for (const indexKey of Object.keys(table.indexes)) {
+          table.indexes[indexKey]?.clear(); // Esvazia o Set sem destruir a sua instância, se a coluna realmente tiver indices
+        }
+
+        this.clearState();
+        result = "Valores removidos com sucesso!";
+        return result;
+      }
+
+      // -------------------------------------------------------------
+      // CASO 2: COM WHERE (Filtragem Eficiente In-Place)
+      // -------------------------------------------------------------
+      let nextValidPosition = 0;
+
+      for (let i = 0; i < table.data.length; i++) {
+        const linha = table.data[i];
+
+        if (!linha) throw new Error("[Mist] Erro interno: A linha não existe")
+
+        if (this.evalCondition(linha, this.tempWhereCondition)) {
+          // Se a linha bate com o WHERE, ela DEVE SER APAGADA.
+          // Removemos os valores desta linha dos índices únicos do banco.
+          for (const columnKey of Object.keys(linha)) {
+            if (table.indexes[columnKey]) {
+              table.indexes[columnKey].delete(linha[columnKey]);
+            }
+          }
+          // Pula a linha: nextValidPosition não avança, então esta linha será sobrescrita.
+        } else {
+          // Se a linha NÃO bate com o WHERE, ela DEVE SER MANTIDA.
+          // Movemos o registro para a "frente" do array, consolidando os sobreviventes.
+          table.data[nextValidPosition] = linha;
+          nextValidPosition++;
+        }
+      }
+
+      // CORTE FINAL: Remove do array, de uma só vez, os registros duplicados que sobraram no fim.
+      // Exemplo: Se tínhamos 8000 linhas e 2 foram apagadas, nextValidPosition terminou em 7998.
+      // O splice(7998) vai cortar as últimas 2 posições excedentes com máxima performance.
+      table.data.splice(nextValidPosition);
+
+      this.clearState();
+      result = "Valor(es) removido(s) com sucesso!";
     }
 
     return result

@@ -464,4 +464,42 @@ describe("Query", () => {
       })
     })
   })
+
+  describe("delete", () => {
+    beforeEach(() => {
+      db.insert(users).values({ id: 1, name: "Miguel", age: 18, email: "miguel@gmail.com" }).execute()
+      db.insert(users).values({ id: 2, name: "João", age: 20, email: "joao@gmail.com" }).execute()
+      db.insert(users).values({ id: 3, name: "Pedro", age: 20, email: "Pedro@gmail.com" }).execute()
+      db.insert(users).values({ id: 4, name: "Paulo", age: 25, email: "Paulo@gmail.com" }).execute()
+      db.insert(users).values({ id: 5, name: "Lucas", age: 27, email: "Lucas@gmail.com" }).execute()
+    })
+
+    describe("Casos de Sucesso", () => {
+      
+      it("deve deletar todos os valores corretamente", () => {
+        const res = db.delete(users).execute()
+
+        expect(res).toBe("Valores removidos com sucesso!")
+        expect(database.tables.users.data).toEqual([])
+      })
+
+      it("deve deletar os valores que satisfazerem a condição", () => {
+        const res = db.delete(users).where(gte(users.age, 20)).execute()
+
+        expect(res).toBe("Valor(es) removido(s) com sucesso!")
+        expect(database.tables.users.data).toEqual([
+          { id: 1, name: "Miguel", age: 18, email: "miguel@gmail.com" }
+        ])
+      })
+    })
+
+    describe("Casos de Erro", () => {
+      it("deve lançar erro se delete() for chamado sem schemaTable", () => {
+        expect(() => {
+          // @ts-ignore: Ignora o TypeScript para forçar o erro em tempo de execução
+          db.delete().execute()
+        }).toThrow("Erro: O schema da table não foi especificado no 'delete'");
+      })
+    })
+  })
 });
