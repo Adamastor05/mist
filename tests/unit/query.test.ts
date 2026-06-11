@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { integer, text } from "../../src/core/column";
+import { boolean, decimal, integer, text } from "../../src/core/column";
 import { createTable } from "../../src/core/table";
 import { createDatabase } from "../../src/core/database";
 import { Query } from "../../src/core/query";
@@ -160,6 +160,61 @@ describe("Query", () => {
           })
           .execute()
         }).toThrow("Erro de tipo: A coluna 'name' espera um text, mas recebeu boolean")
+      })
+
+      it("deve lançar erro se coluna do tipo boolean receber valor diferente", () => {
+        const players = createTable("players", {
+          id: integer("id").primaryKey(),
+          nickName: text("nick_name").notNull(),
+          points: decimal("points").notNull(),
+          isChampion: boolean("is_champion").notNull()
+        })
+        const database = createDatabase({ players })
+        const db = new Query(database)
+        
+        expect(() => {
+          db.insert(players)
+          .values({ 
+            id: 1,
+            nickName: "adan23",
+            points: 8.5,
+            // (ERRO) coluna de tipo boolean recebendo um string 
+            isChampion: "string"
+          })
+        }).toThrow(`Erro de tipo: A coluna 'isChampion' espera um boolean, mas recebeu string`)
+      })
+
+      it("deve lançar erro se coluna do tipo decimal receber valor diferente", () => {
+        const players = createTable("players", {
+          id: integer("id").primaryKey(),
+          nickName: text("nick_name").notNull(),
+          points: decimal("points").notNull(),
+          isChampion: boolean("is_champion").notNull()
+        })
+        const database = createDatabase({ players })
+        const db = new Query(database)
+        
+        expect(() => {
+          db.insert(players)
+          .values({ 
+            id: 1,
+            nickName: "adan23",
+            // (ERRO) coluna de tipo boolean recebendo um integer 
+            points: 8,
+            isChampion: true
+          })
+        }).toThrow(`Erro de tipo: A coluna 'points' espera um decimal, mas recebeu integer`)
+
+        expect(() => {
+          db.insert(players)
+          .values({ 
+            id: 2,
+            nickName: "adan23",
+            // (ERRO) coluna de tipo boolean recebendo um string 
+            points: "string",
+            isChampion: true
+          })
+        }).toThrow(`Erro de tipo: A coluna 'points' espera um decimal, mas recebeu string`)
       })
     })
   })
