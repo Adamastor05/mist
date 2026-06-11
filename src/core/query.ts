@@ -135,6 +135,13 @@ export class Query {
           throw new Error(`Erro de tipo: A coluna '${key}' espera um boolean, mas recebeu ${typeof value}`);
         }
         break
+
+      case "decimal":
+        // Se o valor não for "number" ou se ele for um inteiro, retorna erro
+        if (typeof value !== "number" || Number.isInteger(value)) {
+          throw new Error(`Erro de tipo: A coluna '${key}' espera um decimal, mas recebeu ${typeof value !== "number" ? typeof value : "integer"}`);
+        }
+        break
     }
   }
 

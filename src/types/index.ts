@@ -6,7 +6,7 @@ export type SchemaTable<TColumn = {}> = {
   [key: string]: Column
 }
 
-export type DataType = "integer" | "text" | "boolean";
+export type DataType = "integer" | "text" | "boolean" | "decimal";
 
 export interface ConfigColumn {
     name: string;
