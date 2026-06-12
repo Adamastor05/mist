@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { boolean, integer, text } from "../../src/core/column";
+import { boolean, date, decimal, integer, text } from "../../src/core/column";
 
 describe("Column", () => {
   it("Deve inicializar uma coluna com as configurações padrão corretas", () => {
@@ -22,11 +22,15 @@ describe("Column", () => {
     it("Deve definir o dataType correto para cada função inicializadora", () => {
         const userName = text("user_name");
         const userAge = integer("user_age")
+        const points = decimal("points")
         const userIsActive = boolean("user_is_active")
+        const createdAt = date("created_at")
 
         expect(userName.config.dataType).toBe("text")
         expect(userAge.config.dataType).toBe("integer")
         expect(userIsActive.config.dataType).toBe("boolean")
+        expect(points.config.dataType).toBe("decimal")
+        expect(createdAt.config.dataType).toBe("date")
     })
   })
 

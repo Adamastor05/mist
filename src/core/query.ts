@@ -142,6 +142,12 @@ export class Query {
           throw new Error(`Erro de tipo: A coluna '${key}' espera um decimal, mas recebeu ${typeof value !== "number" ? typeof value : "integer"}`);
         }
         break
+
+      case "date":
+        if (typeof value !== "string" || isNaN(Date.parse(value))) {
+          throw new Error(`Erro de tipo: A coluna '${key}' espera um date valido, mas recebeu ${typeof value}`);
+        }
+      break
     }
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { boolean, decimal, integer, text } from "../../src/core/column";
+import { boolean, date, decimal, integer, text } from "../../src/core/column";
 import { createTable } from "../../src/core/table";
 import { createDatabase } from "../../src/core/database";
 import { Query } from "../../src/core/query";
@@ -215,6 +215,26 @@ describe("Query", () => {
             isChampion: true
           })
         }).toThrow(`Erro de tipo: A coluna 'points' espera um decimal, mas recebeu string`)
+      })
+
+      it("deve lançar erro se coluna do tipo date receber valor diferente", () => {
+        const players = createTable("players", {
+          id: integer("id").primaryKey(),
+          name: text("name").notNull(),
+          createdAt: date("created_at").notNull()
+        })
+        const database = createDatabase({ players })
+        const db = new Query(database)
+
+        expect(() => {
+          db.insert(players)
+          .values({ 
+            id: 2,
+            name: "Miguel",
+            // (ERRO) coluna de tipo dete recebendo um integer 
+            createdAt: 10
+          })
+        }).toThrow(`Erro de tipo: A coluna 'createdAt' espera um date valido, mas recebeu number`)
       })
     })
   })
