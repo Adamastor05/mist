@@ -1,4 +1,4 @@
-import { Database as IDatabase, Column, SchemaTable, DataType, Condition } from "../types";
+import { Database as IDatabase, Column, SchemaTable, ColumnType, Condition } from "../types";
 
 export class Query {
   private database: IDatabase;
@@ -103,7 +103,7 @@ export class Query {
       const { config } = column
 
       // Valida o tipo do dado
-      this.checkDataType(key, value, config.dataType)
+      this.checkColumnType(key, value, config.columnType)
 
       // Valida a restrição de unicidade
       if (config.unique) {
@@ -116,8 +116,8 @@ export class Query {
     }
   }
 
-  private checkDataType(key: string, value: any, dataType: DataType): void {
-    switch (dataType) {
+  private checkColumnType(key: string, value: any, columnType: ColumnType): void {
+    switch (columnType) {
       case "integer":
         if (typeof value !== "number" || !Number.isInteger(value)) {
           throw new Error(`Erro de tipo: A coluna '${key}' espera um integer, mas recebeu ${typeof value}`);

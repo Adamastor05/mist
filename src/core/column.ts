@@ -1,12 +1,12 @@
-import { ConfigColumn, DataType } from "../types";
+import { ConfigColumn, ColumnType } from "../types";
 
 class Column {
   config: ConfigColumn;
 
-  constructor (name: string, dataType: DataType) {
+  constructor (name: string, columnType: ColumnType) {
     this.config = {
       name: name,
-      dataType: dataType,
+      columnType: columnType,
       notNull: false,
       unique: false,
       primaryKey: false,

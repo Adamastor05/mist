@@ -8,7 +8,7 @@ describe("Column", () => {
     // verifica se o objeto config foi definida
     expect(userName.config).toBeDefined();
 
-    expect(userName.config.dataType).toBe("text"); // Garante que o tipo foi setado certo
+    expect(userName.config.columnType).toBe("text"); // Garante que o tipo foi setado certo
     expect(userName.config.keySchema).toBe("");
     expect(userName.config.name).toBe("user_name");
 
@@ -18,19 +18,19 @@ describe("Column", () => {
     expect(userName.config.notNull).toBe(false);
   });
 
-  describe("dataTypes", () => {
-    it("Deve definir o dataType correto para cada função inicializadora", () => {
+  describe("columnType", () => {
+    it("Deve definir o columnType correto para cada função inicializadora", () => {
         const userName = text("user_name");
         const userAge = integer("user_age")
         const points = decimal("points")
         const userIsActive = boolean("user_is_active")
         const createdAt = date("created_at")
 
-        expect(userName.config.dataType).toBe("text")
-        expect(userAge.config.dataType).toBe("integer")
-        expect(userIsActive.config.dataType).toBe("boolean")
-        expect(points.config.dataType).toBe("decimal")
-        expect(createdAt.config.dataType).toBe("date")
+        expect(userName.config.columnType).toBe("text")
+        expect(userAge.config.columnType).toBe("integer")
+        expect(userIsActive.config.columnType).toBe("boolean")
+        expect(points.config.columnType).toBe("decimal")
+        expect(createdAt.config.columnType).toBe("date")
     })
   })
 
