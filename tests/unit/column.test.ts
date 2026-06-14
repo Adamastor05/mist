@@ -20,17 +20,25 @@ describe("Column", () => {
 
   describe("columnType", () => {
     it("Deve definir o columnType correto para cada função inicializadora", () => {
-        const userName = text("user_name");
-        const userAge = integer("user_age")
-        const points = decimal("points")
-        const userIsActive = boolean("user_is_active")
-        const createdAt = date("created_at")
+      const userName = text("user_name");
+      const userAge = integer("user_age")
+      const points = decimal("points")
+      const userIsActive = boolean("user_is_active")
+      const createdAt = date("created_at")
 
-        expect(userName.config.columnType).toBe("text")
-        expect(userAge.config.columnType).toBe("integer")
-        expect(userIsActive.config.columnType).toBe("boolean")
-        expect(points.config.columnType).toBe("decimal")
-        expect(createdAt.config.columnType).toBe("date")
+      // testa columnType
+      expect(userName.config.columnType).toBe("text")
+      expect(userAge.config.columnType).toBe("integer")
+      expect(userIsActive.config.columnType).toBe("boolean")
+      expect(points.config.columnType).toBe("decimal")
+      expect(createdAt.config.columnType).toBe("date")
+
+      // testa dataType
+      expect(userName.config.dataType).toBe("string")
+      expect(userAge.config.dataType).toBe("number")
+      expect(userIsActive.config.dataType).toBe("boolean")
+      expect(points.config.dataType).toBe("number")
+      expect(createdAt.config.dataType).toBe("string")
     })
   })
 

@@ -1,12 +1,13 @@
-import { ConfigColumn, ColumnType } from "../types";
+import { ConfigColumn, ColumnType, DataType } from "../types";
 
 class Column {
   config: ConfigColumn;
 
-  constructor (name: string, columnType: ColumnType) {
+  constructor (name: string, columnType: ColumnType, dataType: DataType) {
     this.config = {
       name: name,
       columnType: columnType,
+      dataType: dataType,
       notNull: false,
       unique: false,
       primaryKey: false,
@@ -32,11 +33,11 @@ class Column {
   }
 }
 
-export const integer = (name: string) => new Column(name, "integer")
-export const text = (name: string) => new Column(name, "text")
-export const boolean = (name: string) => new Column(name, "boolean")
-export const decimal = (name: string) => new Column(name, "decimal")
-export const date = (name: string) => new Column(name, "date")
+export const integer = (name: string) => new Column(name, "integer", "number")
+export const text = (name: string) => new Column(name, "text", "string")
+export const boolean = (name: string) => new Column(name, "boolean", "boolean")
+export const decimal = (name: string) => new Column(name, "decimal", "number")
+export const date = (name: string) => new Column(name, "date", "string")
 
 
 export function mistDate(value?: Date | string): string {
