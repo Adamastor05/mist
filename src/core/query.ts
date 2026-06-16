@@ -330,8 +330,8 @@ export class Query {
     this.tempData = []
   }
 
-  execute() {
-    let result: unknown; 
+  execute<T = any>(): T[] | string {
+    let result: T[] | string = "";
 
     if (this.queryType === "SELECT") {
       if (!this.tempSchemaTable) throw new Error("[Mist] Erro interno: O tempSchemaTable não existe ou é null");
@@ -356,7 +356,7 @@ export class Query {
         result = this.tempData
 
         this.clearState()
-        return result
+        return result as T[]
       }
 
       // Monta as novas linhas
@@ -380,7 +380,7 @@ export class Query {
         this.tempData.push({ ...newLine }) // envia uma copia da linha
       }
 
-      result = this.tempData
+      result = this.tempData as T[]
       this.clearState()
     }
 
