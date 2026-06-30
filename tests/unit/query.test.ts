@@ -37,7 +37,7 @@ describe("Query", () => {
           })
           .execute();
   
-        expect(res).toBe("Dados inseridos com sucesso!");
+        expect(res).toEqual([]);
         expect(database.tables.users.data[0]).toEqual({
           id: 1,
           name: "lucas",
@@ -57,7 +57,7 @@ describe("Query", () => {
           })
           .execute();
   
-        expect(res).toBe("Dados inseridos com sucesso!");
+        expect(res).toEqual([]);
         expect(database.tables.users.data[0]).toEqual({
           id: 1,
           name: "lucas",
@@ -492,7 +492,7 @@ describe("Query", () => {
         .where(eq(users.id, 1))
         .execute()
 
-        expect(res).toBe("Dados atualizados com sucesso!")
+        expect(res).toEqual([])
         expect(database.tables.users.data[0]).toEqual({ id: 1, name: "Pedro", age: 18, email: "miguel@gmail.com" })
       })
 
@@ -503,7 +503,7 @@ describe("Query", () => {
         .where(eq(users.id, 1))
         .execute()
 
-        expect(res).toBe("Dados atualizados com sucesso!")
+        expect(res).toEqual([])
         expect(database.tables.users.data[0]).toEqual({ id: 1, name: "Pedro", age: 18, email: "pedro@gmail.com" })
       })
 
@@ -513,7 +513,7 @@ describe("Query", () => {
         .set({ name: "Pedro" })
         .execute()
 
-        expect(res).toBe("Dados atualizados com sucesso!")
+        expect(res).toEqual([])
         expect(database.tables.users.data).toEqual([
           { id: 1, name: "Pedro", age: 18, email: "miguel@gmail.com" },
           { id: 2, name: "Pedro", age: 25, email: "Paulo@gmail.com" }
@@ -554,14 +554,14 @@ describe("Query", () => {
       it("deve deletar todos os valores corretamente", () => {
         const res = db.delete(users).execute()
 
-        expect(res).toBe("Valores removidos com sucesso!")
+        expect(res).toEqual([])
         expect(database.tables.users.data).toEqual([])
       })
 
       it("deve deletar os valores que satisfazerem a condição", () => {
         const res = db.delete(users).where(gte(users.age, 20)).execute()
 
-        expect(res).toBe("Valor(es) removido(s) com sucesso!")
+        expect(res).toEqual([])
         expect(database.tables.users.data).toEqual([
           { id: 1, name: "Miguel", age: 18, email: "miguel@gmail.com" }
         ])

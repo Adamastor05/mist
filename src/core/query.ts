@@ -330,8 +330,8 @@ export class Query {
     this.tempData = []
   }
 
-  execute<T = any>(): T[] | string {
-    let result: T[] | string = "";
+  execute<T = any>(): T[] {
+    let result: T[] = [];
 
     if (this.queryType === "SELECT") {
       if (!this.tempSchemaTable) throw new Error("[Mist] Erro interno: O tempSchemaTable não existe ou é null");
@@ -404,7 +404,7 @@ export class Query {
 
       table.data.push({ ...newLine })
 
-      result = "Dados inseridos com sucesso!"
+      result = []
       this.clearState()
     }
 
@@ -476,7 +476,7 @@ export class Query {
       }
 
       this.clearState()
-      result = "Dados atualizados com sucesso!"
+      result = []
     }
 
 
@@ -499,7 +499,7 @@ export class Query {
         }
 
         this.clearState();
-        result = "Valores removidos com sucesso!";
+        result = []
         return result;
       }
 
@@ -536,7 +536,7 @@ export class Query {
       table.data.splice(nextValidPosition);
 
       this.clearState();
-      result = "Valor(es) removido(s) com sucesso!";
+      result = []
     }
 
     return result
