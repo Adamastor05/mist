@@ -1,5 +1,5 @@
-import { SelectCommand } from "../commands/select.command";
 import { Database as IDatabase, Column, SchemaTable, ColumnType, Condition } from "../types";
+import { SelectCommand } from "./select.command";
 
 export class Query {
   private database: IDatabase;
@@ -24,14 +24,13 @@ export class Query {
     this.tempData = []
   }
 
-   select(columns?: Record<string, Column>): SelectCommand {
-      this.queryType = "SELECT"
-  
-      
-  
-      return new SelectCommand(this.database, columns)
-    }
-  
+  select(columns?: Record<string, Column>): SelectCommand {
+    this.queryType = "SELECT"
+
+    
+
+    return new SelectCommand(this.database, columns)
+  }
 
   from(schemaTable: SchemaTable): Query {
     if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'from'");
