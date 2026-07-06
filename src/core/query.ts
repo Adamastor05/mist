@@ -1,3 +1,4 @@
+import { DeleteCommand } from "../commands/delete.command";
 import { InsertCommand } from "../commands/insert.command";
 import { SelectCommand } from "../commands/select.command";
 import { UpdateCommand } from "../commands/update.command";
@@ -222,13 +223,10 @@ export class Query {
     DELETE
   */
 
-   delete(schemaTable: SchemaTable): Query {
+  delete(schemaTable: SchemaTable): DeleteCommand {
     if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'delete'");
 
-    this.queryType = "DELETE"
-    this.tempSchemaTable = schemaTable
-
-    return this
+    return new DeleteCommand(this.database, schemaTable)
   }
 
   /*
