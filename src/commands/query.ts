@@ -1,4 +1,5 @@
 import { Database as IDatabase, Column, SchemaTable, ColumnType, Condition } from "../types";
+import { InsertCommand } from "./insert.command";
 import { SelectCommand } from "./select.command";
 
 export class Query {
@@ -40,17 +41,10 @@ export class Query {
     return this
   }
 
-  insert(schemaTable: SchemaTable): Query {
+  insert(schemaTable: SchemaTable): InsertCommand {
     if (!schemaTable) throw new Error("Erro: Nenhuma tabela foi especificada no 'insert'");
 
-    // Verifica se a tabela existe no banco
-    const tableName = schemaTable.__nameTable
-    if (!this.database.tables[tableName]) throw new Error(`A tabela ${tableName} não existe no banco`);
-    
-    this.tempSchemaTable = schemaTable
-    this.queryType = "INSERT"
-
-    return this
+    return new InsertCommand(this.database, schemaTable)
   }
 
   values(values: Record<string, any>): Query {
