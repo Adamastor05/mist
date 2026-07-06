@@ -1,6 +1,7 @@
 import { Database as IDatabase, Column, SchemaTable, ColumnType, Condition } from "../types";
 import { InsertCommand } from "./insert.command";
 import { SelectCommand } from "./select.command";
+import { UpdateCommand } from "./update.command";
 
 export class Query {
   private database: IDatabase;
@@ -187,13 +188,12 @@ export class Query {
     UPDATE e SET
   */
 
-  update(schemaTable: SchemaTable): Query {
+  update(schemaTable: SchemaTable): UpdateCommand {
     if (!schemaTable) throw new Error("Erro: O schema da table não foi especificado no 'update'");
 
-    this.queryType = "UPDATE"
-    this.tempSchemaTable = schemaTable
+    
 
-    return this
+    return new  UpdateCommand(this.database, schemaTable)
   }
 
   set(values: Record<string, any>): Query {
