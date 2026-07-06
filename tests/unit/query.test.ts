@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { boolean, date, decimal, integer, text } from "../../src/core/column";
 import { createTable } from "../../src/core/table";
 import { createDatabase } from "../../src/core/database";
-import { Query } from "../../src/core/query";
+import { Query } from "../../src/commands";
 import { eq, ne, gt, gte, lt, lte, and, or, not } from "../../src/core/operators"
 
 describe("Query", () => {
