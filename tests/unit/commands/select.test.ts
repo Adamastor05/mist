@@ -231,4 +231,72 @@ describe("select e from", () => {
       });
     });
   });
+
+
+  describe("limit", () => {
+    beforeEach(() => {
+      db.insert(users).values({ id: 1, name: "João", age: 20, email: "joao@gmail.com" }).execute()
+      db.insert(users).values({ id: 2, name: "Marcos", age: 25, email: "marcos@gmail.com" }).execute()
+      db.insert(users).values({ id: 3, name: "Pedro", age: 21, email: "pedro@gmail.com" }).execute()
+      db.insert(users).values({ id: 4, name: "Tiago", age: 30, email: "tiago@gmail.com" }).execute()
+    })
+
+    describe("Cenários de Sucesso", () => {
+      it("deve buscar dados com um limite de duas linhas", () => {
+        const res = db.select().from(users).limit(2).execute()
+
+        expect(res).toHaveLength(2)
+        expect(res).toEqual([
+          { id: 1, name: "João", age: 20, email: "joao@gmail.com" },
+          { id: 2, name: "Marcos", age: 25, email: "marcos@gmail.com" }
+        ])
+      })
+
+      it("deve buscar dados fazendo mapeamento de coluna com um limite de duas linhas", () => {
+        const res = db
+        .select({ nameUser: users.name })
+        .from(users)
+        .limit(2)
+        .execute()
+
+        expect(res).toHaveLength(2)
+        expect(res).toEqual([
+          { nameUser: "João" },
+          { nameUser: "Marcos" }
+        ])
+      })
+
+      it("deve buscar dados filtrando, com um limite de duas linhas", () => {
+        const res = db
+        .select()
+        .from(users)
+        .where(gt(users.age, 20))
+        .limit(2)
+        .execute()
+
+        expect(res).toHaveLength(2)
+        expect(res).toEqual([
+          { id: 2, name: "Marcos", age: 25, email: "marcos@gmail.com" },
+          { id: 3, name: "Pedro", age: 21, email: "pedro@gmail.com" }
+        ])
+      })
+    })
+
+    describe("Cenários de Erro", () => {
+      it("deve lançar erro se nenhum valor for passado para limit()", () => {
+         expect(() => {
+          // @ts-ignore
+          db.select().from(users).limit(/* vazio */).execute()
+        })
+        .toThrow("Erro: Nenhum valor foi passado no 'limit'")
+      })
+
+      it("deve lançar erro se o valor passado para limit() for menor que 0", () => {
+        expect(() => {
+          db.select().from(users).limit(-1).execute()
+        })
+        .toThrow("Erro: O valor do 'limit' não pode ser negativo")
+      })
+    })
+  })
 });
